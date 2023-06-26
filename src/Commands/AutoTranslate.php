@@ -32,6 +32,7 @@ class AutoTranslate extends Command
         '(WEBSITE_PHONE)'   => 2,
         '(WEBSITE_URL)'     => 2,
         '(WEBSITE_EMAIL)'   => 5,
+        '(TEAG)'            => 5,
         '(WEBSITE_NAME)'    => 32,
         '%s'                => 6,
     ];
@@ -45,7 +46,6 @@ class AutoTranslate extends Command
     {
         $locales        = config('auto-translate.locales');
         $base_locale    = config('auto-translate.base_locale');
-        $base_locale    = 'en';
         $baseFilePath   = lang_path($base_locale);
 
         $allBaseFiles = [];
@@ -89,8 +89,7 @@ class AutoTranslate extends Command
                     $this->info('- File ' . $file . ', please wait...');
                     
                     $translator = new GoogleTranslate($locale);
-                    $translator->setSource('fr');
-                    // $translator->setSource($base_locale);
+                    $translator->setSource($base_locale);
 
                     $results = [];
                     foreach ($basedFileContentArray as $key => $value) {
