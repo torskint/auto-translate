@@ -1,0 +1,24 @@
+{
+    "name": "torskint/auto-translate",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Torskint\\AutoTranslate\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Aristo Dakayao",
+            "email": "20310131+torskint@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "kkomelin/laravel-translatable-string-exporter": "^1.17",
+        "stichoza/google-translate-php": "^4.1"
+    },
+    "require-dev": {
+        "spatie/laravel-package-tools": "^1.9"
+    }
+}
