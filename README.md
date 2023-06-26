@@ -71,8 +71,6 @@ I think it's well documented, I will let you check it.
 
 ## Usage
 
-The package provides 2 Artisan commands:
-
 ### Automatic translations generation
 
 To generate translation JSON files from your source code, you can execute the following command:
