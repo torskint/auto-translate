@@ -3,6 +3,7 @@
 namespace Torskint\AutoTranslate;
 
 use Torskint\AutoTranslate\Commands\AutoTranslate;
+use Torskint\AutoTranslate\Commands\AutoTranslateMissing;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -15,7 +16,8 @@ class AutoTranslateServiceProvider extends PackageServiceProvider
             ->name('auto-translate')
             ->hasConfigFile()
             ->hasCommands([
-                AutoTranslate::class
+                AutoTranslate::class,
+                AutoTranslateMissing::class,
             ]);
     }
 

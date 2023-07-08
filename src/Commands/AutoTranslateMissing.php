@@ -8,14 +8,14 @@ use Stichoza\GoogleTranslate\GoogleTranslate;
 
 use Torskint\AutoTranslate\AutoTranslateHelper;
 
-class AutoTranslate extends Command
+class AutoTranslateMissing extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'auto:translate';
+    protected $signature = 'auto:translate {--missing}';
 
     /**
      * The console command description.
@@ -23,6 +23,7 @@ class AutoTranslate extends Command
      * @var string
      */
     protected $description = 'This command will search everywhere in your code for translations to automatically generate JSON files for you.';
+
 
     /**
      * Execute the console command.
@@ -50,20 +51,23 @@ class AutoTranslate extends Command
         foreach ($locales as $locale) {
             try {
                 $currentLangPath = lang_path($locale);
-                if ( ! is_dir($currentLangPath) ) {
-                    mkdir($currentLangPath, 0777, true);
+                if ( !is_dir($currentLangPath) ) {
+                    continue;
                 }
 
                 foreach ($allBaseFiles as $file) {
+
                     $filePath = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
                     $newFilePath = lang_path($locale . DIRECTORY_SEPARATOR . $file);
 
-                    if ( ! File::exists($filePath) ) {
+                    if ( !File::exists($filePath) || !File::exists($newFilePath) ) {
                         continue;
                     }
 
                     # EPURATION - SUPPRESSION DES LIGNES VIDES
-                    $basedFileData = require $filePath;
+                    $basedFileData  = require $filePath;
+                    $newFileData    = require $newFilePath;
+
                     $basedFileContentArray = [];
                     foreach ($basedFileData as $key => $value) {
                         if ( empty($value) ) {
@@ -71,33 +75,34 @@ class AutoTranslate extends Command
                         }
                         $basedFileContentArray[$key] = $value;
                     }
+                    $missings = array_diff($basedFileContentArray, $newFileData);
 
-                    $this->info('Translating ' . $locale . ', please wait...');
-                    $this->info('- File ' . $file . ', please wait...');
+                    $this->info('Missing ' . $locale . ', please wait...');
+                    $this->info('- File ' . $file . ', please wait... - ' . count($missings));
                     
                     $translator = new GoogleTranslate($locale);
                     $translator->setSource($base_locale);
 
                     $results = [];
-                    foreach ($basedFileContentArray as $key => $value) {
+                    foreach ($missings as $key => $value) {
                         if ( ! empty($value) ) {
                             $results[$key] = $translator->translate($value);
                         }
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
-                    if ( count($basedFileContentArray) <> count($results) ) {
+                    if ( count($basedFileContentArray) <> ($ct = (count($results) + count($newFileData))) ) {
                         $same_nbLines_result[$newFilePath] = array(
-                            "$newFilePath Nb Lignes"    => count($basedFileContentArray),
-                            "BASED Nb Lignes"           => count($results),
+                            "$newFilePath Nb Lignes"    => $ct,
+                            "BASED Nb Lignes"           => count($basedFileContentArray),
                         );
                         file_put_contents(lang_path('same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
                         continue;
                     }
 
                     # Démarrer le traitement
-                    $langageKeyArray = array_keys($basedFileContentArray);
-                    foreach (AutoTranslateHelper::generatedRules($basedFileContentArray) as $__word => $occurence_array) {
+                    $langageKeyArray = array_keys($missings);
+                    foreach (AutoTranslateHelper::generatedRules($missings) as $__word => $occurence_array) {
 
                         foreach (array_values($results) as $file_line_position => $file_line) {
                             if (empty($occurence_array[$file_line_position])) {
@@ -124,7 +129,7 @@ class AutoTranslate extends Command
                     # GENERER LE FICHIER PHP
                     $content_php  = "<?php\n\n";
                     $content_php .= 'return array('."\n";
-                    foreach ($results as $base_key => $text) {
+                    foreach (array_merge($newFileData, $results) as $base_key => $text) {
                         $text = trim($text);
                         $text = str_ireplace('"https://"', "(https://)", $text);
                         $text = str_ireplace('(WEB_PS)', "%s", $text);
@@ -152,4 +157,5 @@ class AutoTranslate extends Command
         }
         return Command::SUCCESS;
     }
+
 }
