@@ -22,7 +22,7 @@ class AutoTranslateMissing extends Command
      *
      * @var string
      */
-    protected $description = 'This command will search everywhere in your code for translations to automatically generate JSON files for you.';
+    protected $description = 'Missings translations to automatically generate PHP files for you.';
 
 
     /**
@@ -69,29 +69,33 @@ class AutoTranslateMissing extends Command
                     $newFileData    = require $newFilePath;
 
                     $basedFileContentArray = [];
+                    $missings = [];
                     foreach ($basedFileData as $key => $value) {
                         if ( empty($value) ) {
                             continue;
                         }
                         $basedFileContentArray[$key] = $value;
+
+                        if ( !isset($newFileData[$key]) ) {
+                            $missings[$key] = $value;
+                        }
                     }
-                    $missings = array_diff($basedFileContentArray, $newFileData);
 
                     $this->info('Missing ' . $locale . ', please wait...');
-                    $this->info('- File ' . $file . ', please wait... - ' . count($missings));
+                    $this->info('- File ' . $file . ', please wait... - ' . count($missings) . ' LINES.');
                     
                     $translator = new GoogleTranslate($locale);
                     $translator->setSource($base_locale);
 
                     $results = [];
                     foreach ($missings as $key => $value) {
-                        if ( ! empty($value) ) {
-                            $results[$key] = $translator->translate($value);
-                        }
+                        $results[$key] = $translator->translate($value);
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
-                    if ( count($basedFileContentArray) <> ($ct = (count($results) + count($newFileData))) ) {
+                    $composedData = array_merge($newFileData, $results);
+
+                    if ( count($basedFileContentArray) <> ( $ct = count($composedData) )) {
                         $same_nbLines_result[$newFilePath] = array(
                             "$newFilePath Nb Lignes"    => $ct,
                             "BASED Nb Lignes"           => count($basedFileContentArray),
@@ -129,7 +133,7 @@ class AutoTranslateMissing extends Command
                     # GENERER LE FICHIER PHP
                     $content_php  = "<?php\n\n";
                     $content_php .= 'return array('."\n";
-                    foreach (array_merge($newFileData, $results) as $base_key => $text) {
+                    foreach ($composedData as $base_key => $text) {
                         $text = trim($text);
                         $text = str_ireplace('"https://"', "(https://)", $text);
                         $text = str_ireplace('(WEB_PS)', "%s", $text);

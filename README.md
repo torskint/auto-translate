@@ -79,11 +79,13 @@ To generate translation JSON files from your source code, you can execute the fo
 php artisan auto:translate
 ```
 
-This command will check your configuration `auto-translate.locales` to generate for each locale of this list a JSON file based on your source code (`@lang()`, `__()`, ...) and translate the string into the desired locale based on Google Translations.
+To generate missing translation, you can execute the following command:
 
-## Credits
+```shell
+php artisan auto:translate --missing
+```
 
-- [All Contributors](https://github.com/torskint/auto-translate/graphs/contributors)
+This commands will check your configuration `auto-translate.locales` to generate for each locale of this list a JSON file based on your source code (`@lang()`, `__()`, ...) and translate the string into the desired locale based on Google Translations.
 
 ## License
 
