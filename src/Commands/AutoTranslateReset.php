@@ -12,7 +12,7 @@ class AutoTranslateReset extends Command
      *
      * @var string
      */
-    protected $signature = 'auto-translate:reset';
+    protected $signature = 'ts-translate:reset';
 
     /**
      * The console command description.

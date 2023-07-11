@@ -15,7 +15,7 @@ class AutoTranslate extends Command
      *
      * @var string
      */
-    protected $signature = 'auto-translate:translate';
+    protected $signature = 'ts-translate:translate';
 
     /**
      * The console command description.

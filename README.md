@@ -76,19 +76,19 @@ I think it's well documented, I will let you check it.
 To generate translation JSON files from your source code, you can execute the following command:
 
 ```shell
-php artisan auto-translate:translate
+php artisan ts-translate:translate
 ```
 
 To generate missing translation, you can execute the following command:
 
 ```shell
-php artisan auto-translate:missing
+php artisan ts-translate:missing
 ```
 
 To delete all translated files without based file, execute the following command:
 
 ```shell
-php artisan auto-translate:reset
+php artisan ts-translate:reset
 ```
 
 This commands will check your configuration `auto-translate.locales` to generate for each locale of this list a JSON file based on your source code (`@lang()`, `__()`, ...) and translate the string into the desired locale based on Google Translations.

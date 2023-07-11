@@ -17,9 +17,9 @@ class AutoTranslateServiceProvider extends PackageServiceProvider
             ->name('auto-translate')
             ->hasConfigFile()
             ->hasCommands([
-                AutoTranslate::class, // auto-translate:translate
-                AutoTranslateMissing::class, // auto-translate:missing
-                AutoTranslateReset::class, // auto-translate:reset
+                AutoTranslate::class, // ts-translate:translate
+                AutoTranslateMissing::class, // ts-translate:missing
+                AutoTranslateReset::class, // ts-translate:reset
             ]);
     }
 
