@@ -44,6 +44,8 @@ class AutoTranslateReset extends Command
                     }
 
                     File::delete($newFilePath);
+
+                    $this->info('Reset ' . $locale . ', please wait...');
                 }
 
             } catch (\Exception $e) {

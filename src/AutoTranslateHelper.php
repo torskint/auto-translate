@@ -5,16 +5,6 @@ namespace Torskint\AutoTranslate;
 class AutoTranslateHelper
 {
 
-    // private static $faker__old = [
-    //     '(CREATED_ANNO)'    => 1,
-    //     '(WEBSITE_PHONE)'   => 2,
-    //     '(WEBSITE_URL)'     => 2,
-    //     '(WEBSITE_EMAIL)'   => 5,
-    //     '(TEAG)'            => 5,
-    //     '(WEBSITE_NAME)'    => 32,
-    //     '%s'                => 6,
-    // ];
-
     private static $faker = [
         '(CREATED_ANNO)' ,
         '(WEBSITE_PHONE)',
