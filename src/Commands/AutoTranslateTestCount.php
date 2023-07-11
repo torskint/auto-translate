@@ -97,6 +97,8 @@ class AutoTranslateTestCount extends Command
                                 );
                                 $this->info('Occurrence error :: ' . $locale . " :: WORD == $__word, LINE == $langageKeyName, NORMAL == $getBasedFileWordCountByLine, FOUND == $counter");
                                 file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
+                            } else {
+                                $this->info('Checking ' . $locale . ', OK');
                             }
                         }
                     }
