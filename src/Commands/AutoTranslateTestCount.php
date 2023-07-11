@@ -35,6 +35,7 @@ class AutoTranslateTestCount extends Command
         $base_locale    = config('auto-translate.base_locale');
 
         $nothingToReport = true;
+        $verifyAllIsOk = [];
 
         foreach ($locales as $locale) {
             try {
@@ -76,6 +77,8 @@ class AutoTranslateTestCount extends Command
 
                         $nothingToReport = false;
 
+                        $verifyAllIsOk[] = $locale;
+
                         $this->info('Size Error :: ' . $locale . " :: BASED == $cb, TARGET == $ct");
                         file_put_contents(lang_path('same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
                         continue;
@@ -102,7 +105,8 @@ class AutoTranslateTestCount extends Command
                                 );
 
                                 $nothingToReport = false;
-                                
+                                $verifyAllIsOk[] = $locale;
+
                                 $this->info('Occurrence error :: ' . $locale . " :: WORD == $__word, LINE == $langageKeyName, NORMAL == $getBasedFileWordCountByLine, FOUND == $counter");
                                 file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
                             }
@@ -118,6 +122,11 @@ class AutoTranslateTestCount extends Command
                 $this->error('Error: ' . $e->getMessage());
             }
         }
+
+        if ( empty($verifyAllIsOk) ) {
+            $this->error('TOUT EST BON !!!');
+        }
+        
         return Command::SUCCESS;
     }
 
