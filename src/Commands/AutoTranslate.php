@@ -15,7 +15,7 @@ class AutoTranslate extends Command
      *
      * @var string
      */
-    protected $signature = 'auto:translate';
+    protected $signature = 'auto-translate:translate';
 
     /**
      * The console command description.
@@ -33,28 +33,18 @@ class AutoTranslate extends Command
     {
         $locales        = config('auto-translate.locales');
         $base_locale    = config('auto-translate.base_locale');
-        $baseFilePath   = lang_path($base_locale);
 
-        $allBaseFiles = [];
-        if ( is_dir($baseFilePath) ) {
-            foreach (scandir($baseFilePath) as $file) {
-                if ( $file <> 'translation.php' ) {
-                    continue;
-                }
-                $allBaseFiles[] = $file;
-            }
-        }
         $same_nbLines_result = [];
         $ok_translated_result = [];
 
         foreach ($locales as $locale) {
             try {
-                $currentLangPath = lang_path($locale);
-                if ( ! is_dir($currentLangPath) ) {
+
+                if ( ! is_dir( $currentLangPath = lang_path($locale) ) ) {
                     mkdir($currentLangPath, 0777, true);
                 }
 
-                foreach ($allBaseFiles as $file) {
+                foreach (AutoTranslateHelper::get_bases_files() as $file) {
                     $filePath = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
                     $newFilePath = lang_path($locale . DIRECTORY_SEPARATOR . $file);
 
@@ -81,7 +71,9 @@ class AutoTranslate extends Command
                     $results = [];
                     foreach ($basedFileContentArray as $key => $value) {
                         if ( ! empty($value) ) {
-                            $results[$key] = $translator->translate($value);
+                            $translatedText = $translator->translate($value);
+
+                            $results[$key] = AutoTranslateHelper::rplc($translatedText, $locale);
                         }
                     }
 
@@ -97,7 +89,7 @@ class AutoTranslate extends Command
 
                     # Démarrer le traitement
                     $langageKeyArray = array_keys($basedFileContentArray);
-                    foreach (AutoTranslateHelper::generatedRules($basedFileContentArray) as $__word => $occurence_array) {
+                    foreach (AutoTranslateHelper::count_faker_words_in_based_file($basedFileContentArray) as $__word => $occurence_array) {
 
                         foreach (array_values($results) as $file_line_position => $file_line) {
                             if (empty($occurence_array[$file_line_position])) {
@@ -108,13 +100,15 @@ class AutoTranslate extends Command
 
                             $counter = substr_count($file_line, $__word);
                             if ( $counter <> $getBasedFileWordCountByLine ) {
+                                
                                 $occurence_result[$newFilePath][ $__word ] = array(
                                     'ligne'     => $langageKeyName,
                                     'normal'    => $getBasedFileWordCountByLine,
                                     'trouvé'    => $counter,
                                     'la ligne'  => $file_line,
                                 );
-                                file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
+                                file_put_contents(lang_path('occurence_result_check.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
+
                             } else {
                                 $ok_translated_result[] = $newFilePath;
                             }
