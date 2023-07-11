@@ -34,9 +34,6 @@ class AutoTranslate extends Command
         $locales        = config('auto-translate.locales');
         $base_locale    = config('auto-translate.base_locale');
 
-        $same_nbLines_result = [];
-        $ok_translated_result = [];
-
         foreach ($locales as $locale) {
             try {
 
@@ -78,6 +75,7 @@ class AutoTranslate extends Command
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
+                    $same_nbLines_result = [];
                     if ( count($basedFileContentArray) <> count($results) ) {
                         $same_nbLines_result[$newFilePath] = array(
                             "$newFilePath Nb Lignes"    => count($basedFileContentArray),
@@ -108,9 +106,6 @@ class AutoTranslate extends Command
                                     'la ligne'  => $file_line,
                                 );
                                 file_put_contents(lang_path('occurence_result_check.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
-
-                            } else {
-                                $ok_translated_result[] = $newFilePath;
                             }
                         }
                     }
@@ -138,6 +133,8 @@ class AutoTranslate extends Command
                     $content_php .= ");";
 
                     File::put($newFilePath, $content_php);
+
+                    $this->info('- File ' . $file . ', FINISHED');
                 }
 
             } catch (\Exception $e) {

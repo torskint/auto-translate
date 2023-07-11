@@ -60,7 +60,14 @@ class AutoTranslateHelper
         $data = array(
             'es' => [
                 '(NOMBRE_SITIO WEB)' => '(WEBSITE_NAME)',
-            ]
+            ],
+            'el' => [
+                '(ΤΕΑΓ)' => '(TEAG)',
+            ],
+            'ru' => [
+                '(ИМЯ_ВЕБ-САЙТА)' => '(WEBSITE_NAME)',
+            ],
+            
         );
 
         if ( isset($data[$langIso]) ) {

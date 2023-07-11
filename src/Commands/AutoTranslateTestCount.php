@@ -4,25 +4,24 @@ namespace Torskint\AutoTranslate\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Stichoza\GoogleTranslate\GoogleTranslate;
 
 use Torskint\AutoTranslate\AutoTranslateHelper;
 
-class AutoTranslateMissing extends Command
+class AutoTranslateTestCount extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'ts-translate:missing';
+    protected $signature = 'ts-translate:count';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Missings translations to automatically generate PHP files for you.';
+    protected $description = 'Check that the number of words to be replaced (WEBSITE_NAME, %s, WEBSITE_URL, etc) corresponds to the number in each target language file.';
 
 
     /**
@@ -39,6 +38,7 @@ class AutoTranslateMissing extends Command
             try {
 
                 if ( !is_dir( $currentLangPath = lang_path($locale) ) ) {
+                    $this->error('Error: Dossier Inexistant : ' . $locale);
                     continue;
                 }
 
@@ -48,6 +48,7 @@ class AutoTranslateMissing extends Command
                     $newFilePath = lang_path($locale . DIRECTORY_SEPARATOR . $file);
 
                     if ( !File::exists($filePath) || !File::exists($newFilePath) ) {
+                        $this->error("Error: Fichier Inexistant : {$filePath} / {$newFilePath}");
                         continue;
                     }
 
@@ -56,49 +57,30 @@ class AutoTranslateMissing extends Command
                     $newFileData    = require $newFilePath;
 
                     $basedFileContentArray = [];
-                    $missings = [];
                     foreach ($basedFileData as $key => $value) {
                         if ( empty($value) ) {
                             continue;
                         }
                         $basedFileContentArray[$key] = $value;
-
-                        if ( !isset($newFileData[$key]) ) {
-                            $missings[$key] = $value;
-                        }
                     }
-
-                    $this->info('Missing ' . $locale . ', please wait...');
-                    $this->info('- File ' . $file . ', please wait... - ' . count($missings) . ' LINES.');
+                    $this->info('Checking ' . $locale . ', please wait...');
                     
-                    $translator = new GoogleTranslate($locale);
-                    $translator->setSource($base_locale);
-
-                    $results = [];
-                    foreach ($missings as $key => $value) {
-                        $translatedText = $translator->translate($value);
-
-                        $results[$key] = AutoTranslateHelper::rplc($translatedText, $locale);
-                    }
-
-                    # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
-                    $composedData = array_merge($newFileData, $results);
-
                     $same_nbLines_result = [];
-                    if ( count($basedFileContentArray) <> ( $ct = count($composedData) )) {
+                    if ( ( $cb = count($basedFileContentArray)) <> ( $ct = count($newFileData) )) {
                         $same_nbLines_result[$newFilePath] = array(
                             "$newFilePath Nb Lignes"    => $ct,
-                            "BASED Nb Lignes"           => count($basedFileContentArray),
+                            "BASED Nb Lignes"           => $cb,
                         );
+                        $this->info('Size Error :: ' . $locale . " :: BASED == $cb, TARGET == $ct");
                         file_put_contents(lang_path('same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
                         continue;
                     }
 
                     # Démarrer le traitement
-                    $langageKeyArray = array_keys($missings);
-                    foreach (AutoTranslateHelper::count_faker_words_in_based_file($missings) as $__word => $occurence_array) {
+                    $langageKeyArray = array_keys($basedFileContentArray);
+                    foreach (AutoTranslateHelper::count_faker_words_in_based_file($basedFileContentArray) as $__word => $occurence_array) {
 
-                        foreach (array_values($results) as $file_line_position => $file_line) {
+                        foreach (array_values($newFileData) as $file_line_position => $file_line) {
                             if (empty($occurence_array[$file_line_position])) {
                                 continue;
                             }
@@ -113,36 +95,11 @@ class AutoTranslateMissing extends Command
                                     'trouvé'    => $counter,
                                     'la ligne'  => $file_line,
                                 );
+                                $this->info('Occurrence error :: ' . $locale . " :: WORD == $__word, LINE == $langageKeyName, NORMAL == $getBasedFileWordCountByLine, FOUND == $counter");
                                 file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
                             }
                         }
                     }
-
-                    # GENERER LE FICHIER PHP
-                    $content_php  = "<?php\n\n";
-                    $content_php .= 'return array('."\n";
-                    foreach ($composedData as $base_key => $text) {
-                        $text = trim($text);
-                        $text = str_ireplace('"https://"', "(https://)", $text);
-                        $text = str_ireplace('(WEB_PS)', "%s", $text);
-
-                        // ​​
-                        $text = str_ireplace('​​', "", $text);
-
-                        # SI ON TROUVE DES GUILLEMETS
-                        if (preg_match("/\"/", $text)) {
-                            $text = addslashes($text);
-                        }
-
-                        $content_php .= "\t" . "\"{$base_key}\" => \"{$text}\"," . "\n";
-                    }
-                    $content_php = trim($content_php);
-                    $content_php = trim($content_php, ',') . "\n";
-                    $content_php .= ");";
-
-                    File::put($newFilePath, $content_php);
-
-                    $this->info('- File ' . $file . ', FINISHED');
                 }
 
             } catch (\Exception $e) {
