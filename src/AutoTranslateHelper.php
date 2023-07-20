@@ -65,6 +65,8 @@ class AutoTranslateHelper
         $data = array(
             'es' => [
                 '(NOMBRE_SITIO WEB)' => '(WEBSITE_NAME)',
+                '(SITIO WEB_TELÉFONO)' => '(WEBSITE_PHONE)',
+                '(NOMBRE DEL SITIO WEB)' => '(WEBSITE_NAME)',
             ],
             'el' => [
                 '(ΤΕΑΓ)' => '(TEAG)',
