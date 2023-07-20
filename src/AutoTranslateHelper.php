@@ -41,11 +41,16 @@ class AutoTranslateHelper
     {
         $base_locale    = config('auto-translate.base_locale');
         $baseFilePath   = lang_path($base_locale);
+        $files          = config('auto-translate.files');
 
         $allBaseFiles = [];
         if ( is_dir($baseFilePath) ) {
-            foreach (scandir($baseFilePath) as $file) {
-                if ( $file <> 'translation.php' ) {
+            foreach ($files as $file) {
+
+                $file       = trim($file, '/');
+                $fileUri    = lang_path($base_locale . '/' . $file);
+
+                if ( !is_file($fileUri) ) {
                     continue;
                 }
                 $allBaseFiles[] = $file;

@@ -47,16 +47,26 @@ class AutoTranslateMissing extends Command
                     $filePath = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
                     $newFilePath = lang_path($locale . DIRECTORY_SEPARATOR . $file);
 
-                    if ( !File::exists($filePath) || !File::exists($newFilePath) ) {
+                    # TEMPORAIRES
+                    if ( !is_dir($tsDir  = dirname($newFilePath)) ) {
+                        mkdir($tsDir, 0777, true);
+                    }
+
+
+                    if ( !File::exists($filePath) ) {
                         continue;
                     }
 
                     # EPURATION - SUPPRESSION DES LIGNES VIDES
                     $basedFileData  = require $filePath;
-                    $newFileData    = require $newFilePath;
 
-                    $basedFileContentArray = [];
+                    $newFileData    = [];
+                    if ( is_file($newFilePath) ) {
+                        $newFileData    = require $newFilePath;
+                    }
+
                     $missings = [];
+                    $basedFileContentArray = [];
                     foreach ($basedFileData as $key => $value) {
                         if ( empty($value) ) {
                             continue;
@@ -90,7 +100,7 @@ class AutoTranslateMissing extends Command
                             "$newFilePath Nb Lignes"    => $ct,
                             "BASED Nb Lignes"           => count($basedFileContentArray),
                         );
-                        file_put_contents(lang_path('same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
+                        file_put_contents(lang_path('missing__same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
                         continue;
                     }
 
