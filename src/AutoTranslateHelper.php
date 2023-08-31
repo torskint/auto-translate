@@ -6,16 +6,19 @@ class AutoTranslateHelper
 {
 
     private static $faker = [
-        '(CREATED_ANNO)' ,
-        '(WEBSITE_PHONE)',
-        '(WEBSITE_URL)'  ,
-        '(WEBSITE_EMAIL)',
-        '(TEAG)'         ,
         '(WEBSITE_NAME)' ,
-        '%s'             ,
-
-        '(AUTHOR_NAME)',
-        '(WEBSITE_ADDRESS)',
+        '(CREATED_ANNO)' ,
+        '(WEBSITE_URL)' ,
+        '(WEBSITE_EMAIL)' ,
+        '(WEBSITE_ADDRESS)' ,
+        '(WEBSITE_PHONE)' ,
+        '(WEBMASTER_EMAIL)' ,
+        '(WEBMASTER_NAME)' ,
+        '(AUTHOR_NAME)' ,
+        '(AUTHOR_EMAIL)' ,
+        '(TEAG)',
+        '%s',
+        '\\',
     ];
 
     public static function count_faker_words_in_based_file(array $langage)
