@@ -13,6 +13,9 @@ class AutoTranslateHelper
         '(TEAG)'         ,
         '(WEBSITE_NAME)' ,
         '%s'             ,
+
+        '(AUTHOR_NAME)',
+        '(WEBSITE_ADDRESS)',
     ];
 
     public static function count_faker_words_in_based_file(array $langage)
