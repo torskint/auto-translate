@@ -19,8 +19,8 @@ return [
 
         # For DropZone
         '(PDF)',
-        '{{filesize}}',
-        '{{maxFilesize}}',
+        '({{filesize}}MiB)',
+        '{{maxFilesize}}MiB',
         '{{statusCode}}',
     ],
 
