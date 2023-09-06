@@ -2,6 +2,28 @@
 
 return [
 
+    'preserve_words' => [
+        '(WEBSITE_NAME)' ,
+        '(CREATED_ANNO)' ,
+        '(WEBSITE_URL)' ,
+        '(WEBSITE_EMAIL)' ,
+        '(WEBSITE_ADDRESS)' ,
+        '(WEBSITE_PHONE)' ,
+        '(WEBMASTER_EMAIL)' ,
+        '(WEBMASTER_NAME)' ,
+        '(AUTHOR_NAME)' ,
+        '(AUTHOR_EMAIL)' ,
+        '(TEAG)',
+        '%s',
+        '\\',
+
+        # For DropZone
+        '(PDF)',
+        '{{filesize}}',
+        '{{maxFilesize}}',
+        '{{statusCode}}',
+    ],
+
     /*
      * 
      * Locales managed by auto-translation package, will be used by the 

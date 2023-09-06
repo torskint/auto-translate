@@ -73,16 +73,11 @@ I think it's well documented, I will let you check it.
 
 ### Automatic translations generation
 
-To generate translation JSON files from your source code, you can execute the following command:
-
-```shell
-php artisan ts-translate:translate
-```
-
+To generate translation torskint/* files from your source code, you can execute the following command:
 To generate missing translation, you can execute the following command:
 
 ```shell
-php artisan ts-translate:missing
+php artisan ts-translate:translate
 ```
 
 To delete all translated files without based file, execute the following command:

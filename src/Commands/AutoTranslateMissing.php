@@ -15,7 +15,7 @@ class AutoTranslateMissing extends Command
      *
      * @var string
      */
-    protected $signature = 'ts-translate:missing';
+    protected $signature = 'ts-translate:translate';
 
     /**
      * The console command description.

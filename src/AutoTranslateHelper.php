@@ -5,28 +5,14 @@ namespace Torskint\AutoTranslate;
 class AutoTranslateHelper
 {
 
-    private static $faker = [
-        '(WEBSITE_NAME)' ,
-        '(CREATED_ANNO)' ,
-        '(WEBSITE_URL)' ,
-        '(WEBSITE_EMAIL)' ,
-        '(WEBSITE_ADDRESS)' ,
-        '(WEBSITE_PHONE)' ,
-        '(WEBMASTER_EMAIL)' ,
-        '(WEBMASTER_NAME)' ,
-        '(AUTHOR_NAME)' ,
-        '(AUTHOR_EMAIL)' ,
-        '(TEAG)',
-        '%s',
-        '\\',
-    ];
-
     public static function count_faker_words_in_based_file(array $langage)
     {
+        $preserveWords = config('auto-translate.preserve_words');
+
         $faker_counter = [];
 
         $langageTextArray = array_values($langage);
-        foreach (self::$faker as $word) {
+        foreach ($preserveWords as $word) {
             $faker_counter[$word] = [];
             foreach ($langageTextArray as $lang_key_int => $text) {
                 $countThis = substr_count($text, $word);
