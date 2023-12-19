@@ -56,10 +56,8 @@ class AutoTranslateHelper
     {
         $data = config('auto-translate.to_replace');
 
-        if ( isset($data[$langIso]) ) {
-            foreach ($data[$langIso] as $key => $value) {
-                $text = str_ireplace($key, $value, $text);
-            }
+        foreach ($data as $key => $value) {
+            $text = str_ireplace($key, $value, $text);
         }
 
         return $text;
