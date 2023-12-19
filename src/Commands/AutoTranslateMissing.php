@@ -39,7 +39,7 @@ class AutoTranslateMissing extends Command
             try {
 
                 if ( !is_dir( $currentLangPath = lang_path($locale) ) ) {
-                    continue;
+                    mkdir($currentLangPath, 0755, true);
                 }
 
                 foreach (AutoTranslateHelper::get_bases_files() as $file) {

@@ -54,20 +54,7 @@ class AutoTranslateHelper
 
     public static function rplc($text, $langIso)
     {
-        $data = array(
-            'es' => [
-                '(NOMBRE_SITIO WEB)' => '(WEBSITE_NAME)',
-                '(SITIO WEB_TELÉFONO)' => '(WEBSITE_PHONE)',
-                '(NOMBRE DEL SITIO WEB)' => '(WEBSITE_NAME)',
-            ],
-            'el' => [
-                '(ΤΕΑΓ)' => '(TEAG)',
-            ],
-            'ru' => [
-                '(ИМЯ_ВЕБ-САЙТА)' => '(WEBSITE_NAME)',
-            ],
-            
-        );
+        $data = config('auto-translate.to_replace');
 
         if ( isset($data[$langIso]) ) {
             foreach ($data[$langIso] as $key => $value) {

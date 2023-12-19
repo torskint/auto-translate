@@ -24,6 +24,21 @@ return [
         '{{statusCode}}',
     ],
 
+
+    'to_replace' => [
+        'es' => [
+            '(NOMBRE_SITIO WEB)' => '(WEBSITE_NAME)',
+            '(SITIO WEB_TELÉFONO)' => '(WEBSITE_PHONE)',
+            '(NOMBRE DEL SITIO WEB)' => '(WEBSITE_NAME)',
+        ],
+        'el' => [
+            '(ΤΕΑΓ)' => '(TEAG)',
+        ],
+        'ru' => [
+            '(ИМЯ_ВЕБ-САЙТА)' => '(WEBSITE_NAME)',
+        ],
+    ],
+
     /*
      * 
      * Locales managed by auto-translation package, will be used by the 

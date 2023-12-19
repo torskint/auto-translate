@@ -1,6 +1,6 @@
 @echo off
 echo type "commit" or "update"
-cd "F:\htdocs\htdocs\auto-translate"
+cd "G:\htdocs\htdocs\auto-translate"
 
 set GIT_PATH="C:\Program Files\Git\bin\git.exe"
 set BRANCH = "origin master"
