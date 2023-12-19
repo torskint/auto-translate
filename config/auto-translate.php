@@ -28,6 +28,8 @@ return [
 	'to_replace' => [
 		'(NOME DO SITE)'            => '(WEBSITE_NAME)',
 		'(WEBSEITEN-NAME)'          => '(WEBSITE_NAME)',
+		'(NOME_SITO_WEBS)'          => '(WEBSITE_NAME)',
+		'(NOME_SITO)'          		=> '(WEBSITE_NAME)',
 		'(WEBSITE NAAM)' 			=> '(WEBSITE_NAME)',
 		'(ИМЯ_ВЕБ-САЙТА)' 			=> '(WEBSITE_NAME)',
 		'(NOME_SITO WEB)' 			=> '(WEBSITE_NAME)',
