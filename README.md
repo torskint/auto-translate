@@ -1,6 +1,3 @@
-Voici un **README.md en français**, formaté et prêt à être copié/collé 👇
-
-````markdown
 # Laravel Auto Translate
 
 Ce package fournit un moyen simple d’**automatiser la génération de fichiers de traduction PHP** pour vos projets Laravel.  
