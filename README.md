@@ -125,7 +125,7 @@ Permet de corriger automatiquement certains placeholders que Google Translate ou
 ### Générer toutes les traductions
 
 ```bash
-php artisan auto-translate:all
+php artisan ts-translate:all
 ```
 
 👉 Génère toutes les traductions pour toutes les locales définies.
@@ -135,7 +135,7 @@ php artisan auto-translate:all
 ### Réinitialiser toutes les traductions
 
 ```bash
-php artisan auto-translate:reset
+php artisan ts-translate:reset
 ```
 
 👉 Supprime toutes les traductions générées et conserve uniquement les fichiers de base.
@@ -145,7 +145,7 @@ php artisan auto-translate:reset
 ### Vérifier les placeholders
 
 ```bash
-php artisan auto-translate:count
+php artisan ts-translate:count
 ```
 
 👉 Vérifie que le nombre de placeholders est identique avant et après traduction.
