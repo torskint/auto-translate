@@ -2,6 +2,8 @@
 
 namespace Torskint\AutoTranslate\Helpers;
 
+use Illuminate\Support\Facades\Log;
+
 class AutoTranslatePlaceholderHelper
 {
     /**
@@ -34,12 +36,18 @@ class AutoTranslatePlaceholderHelper
         preg_match_all($placeholder_pattern, $translated, $transMatches);
 
         if ($origMatches[0] !== $transMatches[0]) {
-            throw new \RuntimeException(
-                "Les placeholders ne correspondent pas.\n".
-                "Original: " . implode(', ', $origMatches[0]) . "\n".
-                "Traduit: " . implode(', ', $transMatches[0]) . "\n".
-                "Référence: " . $original_key
-            );
+            // throw new \RuntimeException(
+            //     "Les placeholders ne correspondent pas.\n".
+            //     "Original: " . implode(', ', $origMatches[0]) . "\n".
+            //     "Traduit: " . implode(', ', $transMatches[0]) . "\n".
+            //     "Référence: " . $original_key
+            // );
+
+            Log::warning('[TS_TRANSLATE] Incohérence de placeholders détectée', [
+                'Original'  => implode(', ', $origMatches[0]),
+                'Traduit'   => implode(', ', $transMatches[0]),
+                'Référence' => $original_key, // identifiant unique
+            ]);
         }
 
         return $translated;
