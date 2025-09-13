@@ -1,6 +1,8 @@
 @echo off
 echo type "commit" or "update"
-cd "G:\htdocs\htdocs\auto-translate"
+
+set current_dir=%cd%
+cd %current_dir%
 
 set GIT_PATH="C:\Program Files\Git\bin\git.exe"
 set BRANCH = "origin master"
@@ -14,11 +16,6 @@ if "%ACTION%"=="c" (
 	%GIT_PATH% commit -am "Auto-committed on %date%"
 	rem %GIT_PATH% pull %BRANCH%
 	%GIT_PATH% push %BRANCH%
-)
-
-rem mettre a jour
-if "%ACTION%"=="u" (
-	%GIT_PATH% pull %BRANCH%
 )
 
 rem Quitter

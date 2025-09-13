@@ -6,16 +6,17 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 
-use Torskint\AutoTranslate\AutoTranslateHelper;
+use Torskint\AutoTranslate\Helpers\AutoTranslateHelper;
+use Torskint\AutoTranslate\Helpers\AutoTranslatePlaceholderHelper;
 
-class AutoTranslateMissing extends Command
+class AutoTranslateStarter extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'ts-translate:translate';
+    protected $signature = 'ts-translate:all';
 
     /**
      * The console command description.
@@ -42,6 +43,10 @@ class AutoTranslateMissing extends Command
                     mkdir($currentLangPath, 0755, true);
                 }
 
+                # INITIALISATION DE GOOGLE TRANSLATE.
+                $translator = new GoogleTranslate($locale);
+                $translator->setSource($base_locale);
+
                 foreach (AutoTranslateHelper::get_bases_files() as $file) {
 
                     $filePath = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
@@ -52,7 +57,8 @@ class AutoTranslateMissing extends Command
                         mkdir($tsDir, 0777, true);
                     }
 
-
+                    # SI LE FICHIER DE LANG DE BASE EST INTROUVABLE
+                    # ON QUITTE L'EXECUTION DU SCRIPT.
                     if ( !File::exists($filePath) ) {
                         continue;
                     }
@@ -78,17 +84,28 @@ class AutoTranslateMissing extends Command
                         }
                     }
 
+                    if ( empty($missings) ) {
+                        $this->info('RAS -> ' . $locale . ' -> OK.');
+                        continue;
+                    }
                     $this->info('Missing ' . $locale . ', please wait...');
                     $this->info('- File ' . $file . ', please wait... - ' . count($missings) . ' LINES.');
-                    
-                    $translator = new GoogleTranslate($locale);
-                    $translator->setSource($base_locale);
 
                     $results = [];
-                    foreach ($missings as $key => $value) {
-                        $translatedText = $translator->translate($value);
+                    foreach ($missings as $original_key => $original_str) {
 
-                        $results[$key] = AutoTranslateHelper::rplc($translatedText, $locale);
+                        # VEROUILLAGE DES PLACEHOLDERS
+                        $protected_str = AutoTranslatePlaceholderHelper::protect($original_str);
+
+                        # DEMARRAGE DE LA TRADUCTION DU TEXTE ACTUEL
+                        $translated_str = $translator->translate($protected_str);
+
+                        # RESTORATION DES PLACEHOLDERS
+                        $restored_str = AutoTranslatePlaceholderHelper::restore($original_str, $translated_str, $original_key);
+
+                        # REMPLACEMENT DE CERTAINS MOTS LOCAUX PAR LEURS EQUIVALENTS
+                        $results[$key] = AutoTranslateHelper::rplc($restored_str, $locale);
+
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
@@ -100,7 +117,7 @@ class AutoTranslateMissing extends Command
                             "$newFilePath Nb Lignes"    => $ct,
                             "BASED Nb Lignes"           => count($basedFileContentArray),
                         );
-                        file_put_contents(lang_path('missing__same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
+                        file_put_contents(app_path('missing__same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
                         continue;
                     }
 
@@ -123,32 +140,27 @@ class AutoTranslateMissing extends Command
                                     'trouvé'    => $counter,
                                     'la ligne'  => $file_line,
                                 );
-                                file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
+                                file_put_contents(app_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
                             }
                         }
                     }
 
                     # GENERER LE FICHIER PHP
-                    $content_php  = "<?php\n\n";
-                    $content_php .= 'return array('."\n";
+                    $arrayData = [];
                     foreach ($composedData as $base_key => $text) {
                         $text = trim($text);
                         $text = str_ireplace('"https://"', "(https://)", $text);
                         $text = str_ireplace('(WEB_PS)', "%s", $text);
 
                         // ​​
-                        $text = str_ireplace('​​', "", $text);
+                        $text = preg_replace("/[\x00-\x1F\x7F\xA0]/u", '', $text);
 
                         # SI ON TROUVE DES GUILLEMETS
-                        if (preg_match("/\"/", $text)) {
-                            $text = addslashes($text);
-                        }
+                        $text = str_replace('"', '\"', $text);
 
-                        $content_php .= "\t" . "\"{$base_key}\" => \"{$text}\"," . "\n";
+                        $arrayData[$base_key] = $text;
                     }
-                    $content_php = trim($content_php);
-                    $content_php = trim($content_php, ',') . "\n";
-                    $content_php .= ");";
+                    $content_php = "<?php\n\nreturn " . var_export($arrayData, true) . ";\n";
 
                     File::put($newFilePath, $content_php);
 

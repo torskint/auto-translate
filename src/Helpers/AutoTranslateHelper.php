@@ -1,13 +1,13 @@
 <?php
 
-namespace Torskint\AutoTranslate;
+namespace Torskint\AutoTranslate\Helpers;
 
 class AutoTranslateHelper
 {
 
-    public static function count_faker_words_in_based_file(array $langage)
+    public static function count_faker_words_in_based_file(array $langage): array
     {
-        $preserveWords = config('auto-translate.preserve_words');
+        $preserveWords = config('auto-translate.preserve_words', []);
 
         $faker_counter = [];
 
@@ -29,11 +29,11 @@ class AutoTranslateHelper
         return $faker_counter;
     }
 
-    public static function get_bases_files()
+    public static function get_bases_files(): array
     {
         $base_locale    = config('auto-translate.base_locale');
         $baseFilePath   = lang_path($base_locale);
-        $files          = config('auto-translate.files');
+        $files          = config('auto-translate.files', []);
 
         $allBaseFiles = [];
         if ( is_dir($baseFilePath) ) {
@@ -52,12 +52,14 @@ class AutoTranslateHelper
         return $allBaseFiles;
     }
 
-    public static function rplc($text, $langIso)
+    public static function rplc($text, $langIso): string
     {
-        $data = config('auto-translate.to_replace');
+        $data = config('auto-translate.to_replace', []);
 
-        foreach ($data as $key => $value) {
-            $text = str_ireplace($key, $value, $text);
+        if ( isset($data[$langIso]) ) {
+            foreach ($data[$langIso] as $key => $value) {
+                $text = str_ireplace($key, $value, $text);
+            }
         }
 
         return $text;

@@ -2,8 +2,7 @@
 
 namespace Torskint\AutoTranslate;
 
-use Torskint\AutoTranslate\Commands\AutoTranslate;
-use Torskint\AutoTranslate\Commands\AutoTranslateMissing;
+use Torskint\AutoTranslate\Commands\AutoTranslateStarter;
 use Torskint\AutoTranslate\Commands\AutoTranslateReset;
 use Torskint\AutoTranslate\Commands\AutoTranslateTestCount;
 
@@ -19,7 +18,7 @@ class AutoTranslateServiceProvider extends PackageServiceProvider
             ->name('auto-translate')
             ->hasConfigFile()
             ->hasCommands([
-                AutoTranslateMissing::class, // ts-translate:missing
+                AutoTranslateStarter::class, // ts-translate:translate
                 AutoTranslateReset::class, // ts-translate:reset
                 AutoTranslateTestCount::class, // ts-translate:count
             ]);

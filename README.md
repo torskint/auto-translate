@@ -1,99 +1,169 @@
-# Laravel Auto Translations
+Voici un **README.md en français**, formaté et prêt à être copié/collé 👇
 
-This package provides a simple way to automatically generate translation PHP files for you.
-The translation are generated automatically using Google Translations, based on the package `stichoza/google-translate-php` and exporting translations string from your source code using the package `kkomelin/laravel-translatable-string-exporter`.
+````markdown
+# Laravel Auto Translate
 
-# Installation
+Ce package fournit un moyen simple d’**automatiser la génération de fichiers de traduction PHP** pour vos projets Laravel.  
+Les traductions sont générées automatiquement à partir d’une **langue de référence** (`base_locale`) vers toutes les locales configurées, en utilisant une API de traduction (Google Translate ou OpenAI).
 
-You can install the package via composer:
+Il inclut :  
+✅ La protection stricte des **placeholders** (`(WEBSITE_NAME)`, `%s`, `{{statusCode}}`, etc.)  
+✅ Un système de **corrections post-traduction** (`to_replace`) pour éviter les mauvaises substitutions faites par les moteurs de traduction  
+✅ La gestion de fichiers spécifiques (ex. conditions générales, politique de confidentialité, mentions légales…)  
+✅ Des commandes Artisan pour générer, vérifier et réinitialiser vos traductions  
 
-```shell
+---
+
+## ⚙️ Installation
+
+Installer le package via Composer :
+
+```bash
 composer require torskint/auto-translate
-```
+````
 
-Add the package provider into your `config/app.php` file:
+Ajouter le provider dans votre fichier `config/app.php` :
 
 ```php
-//...
-
 'providers' => [
-      // ...
-
-      \Torskint\AutoTranslate\AutoTranslateServiceProvider::class,
+    // ...
+    \Torskint\AutoTranslate\AutoTranslateServiceProvider::class,
 ],
-
-// ...
 ```
 
-*REQUIRED*: You need to publish the package config file, so you can update the `base_locale` and `locales` list as needed:
+Publier le fichier de configuration :
 
-```shell
+```bash
 php artisan vendor:publish --tag=auto-translate-config
 ```
 
-**That's it**, you can use the package commands to generate missing translations and automatically translate them using Google Translations
+---
 
-# Configuration
+## 📂 Configuration
 
-The configuration file of this package comes like below:
+Le fichier `config/auto-translate.php` permet de personnaliser le comportement du package.
+
+### Langue de base
 
 ```php
-<?php
+'base_locale' => 'fr',
+```
 
-return [
+La langue de référence à partir de laquelle toutes les traductions seront générées.
 
-    /*
-     * 
-     * Locales managed by auto-translation package, will be used by the 
-     * command "auto:translate" to generate a JSON file for each of this 
-     * locales, and by the command "translate:missing" to generate their
-     * missing translations
-     * 
-     */
-    'locales' => [
-        'en',
-        'de',
-        'ar'
+---
+
+### Locales gérées
+
+```php
+'locales' => [
+    'en', 'de', 'es', 'it', 'ru', 'el', 'tr', 'pl', 'pt',
+    'sv', 'fi', 'nl', 'hu', 'ro', 'sk', 'sq', 'sl', 'bg',
+    'da', 'no', 'lv', 'lt', 'et', 'hr', 'mn', 'uz', 'ky',
+    'hy', 'kk', 'tg', 'lb',
+],
+```
+
+La liste complète des locales qui seront générées automatiquement.
+
+---
+
+### Fichiers à traduire
+
+```php
+'files' => [
+    'torskint/privacy-policy.php',
+    'torskint/terms-and-conditions-of-use.php',
+    'torskint/cookie-policy.php',
+    'torskint/legal-notice.php',
+],
+```
+
+Liste des fichiers contenant du contenu statique (souvent juridique) à traduire.
+
+---
+
+### Protection des placeholders
+
+```php
+'preserve_words' => [
+    '(WEBSITE_NAME)', '(WEBSITE_EMAIL)', '(WEBSITE_PHONE)',
+    '(AUTHOR_NAME)', '(AUTHOR_EMAIL)', '(TEAG)',
+    '(PDF)', '({{filesize}}MiB)', '{{maxFilesize}}MiB', '{{statusCode}}',
+    '\\', '%s', '%d',
+],
+```
+
+Regex utilisée pour détecter les placeholders dynamiques :
+
+```php
+'preserve_words_pattern' => '/\(\w+\)|%s|%d|\\\\|\(PDF\)|\(\{\{[a-zA-Z0-9_]+\}\}MiB\)|\{\{[a-zA-Z0-9_]+\}\}MiB|\{\{[a-zA-Z0-9_]+\}\}/',
+```
+
+---
+
+### Corrections post-traduction (`to_replace`)
+
+```php
+'to_replace' => [
+    'es' => [
+        '(NOMBRE_SITIO WEB)'    => '(WEBSITE_NAME)',
+        '(SITIO WEB_TELÉFONO)'  => '(WEBSITE_PHONE)',
     ],
-
-    /*
-     * 
-     * The base locale to use when using the command "translate:missing" to
-     * generate missing translations for other JSON files
-     * 
-     */
-    'base_locale' => 'fr'
-
-];
+    'el' => [
+        '(ΤΕΑΓ)' => '(TEAG)',
+    ],
+    'ru' => [
+        '(ИМЯ_ВЕБ-САЙТА)' => '(WEBSITE_NAME)',
+    ],
+],
 ```
 
-I think it's well documented, I will let you check it.
+Permet de corriger automatiquement certains placeholders que Google Translate ou OpenAI peuvent traduire par erreur.
 
-## Usage
+---
 
-### Automatic translations generation
+## 🚀 Utilisation
 
-To generate translation torskint/* files from your source code, you can execute the following command:
-To generate missing translation, you can execute the following command:
+### Générer toutes les traductions
 
-```shell
-php artisan ts-translate:translate
+```bash
+php artisan auto-translate:all
 ```
 
-To delete all translated files without based file, execute the following command:
+👉 Génère toutes les traductions pour toutes les locales définies.
 
-```shell
-php artisan ts-translate:reset
+---
+
+### Réinitialiser toutes les traductions
+
+```bash
+php artisan auto-translate:reset
 ```
 
-Check that the number of words to be replaced (WEBSITE_NAME, %s, WEBSITE_URL, etc) corresponds to the number in each target language file.
+👉 Supprime toutes les traductions générées et conserve uniquement les fichiers de base.
 
-```shell
-php artisan ts-translate:count
+---
+
+### Vérifier les placeholders
+
+```bash
+php artisan auto-translate:count
 ```
 
-This commands will check your configuration `auto-translate.locales` to generate for each locale of this list a JSON file based on your source code (`@lang()`, `__()`, ...) and translate the string into the desired locale based on Google Translations.
+👉 Vérifie que le nombre de placeholders est identique avant et après traduction.
+Exemple : `(WEBSITE_NAME)` doit rester **exactement** `(WEBSITE_NAME)`.
 
-## License
+---
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+## 🔒 Sécurité
+
+* Les placeholders sont protégés avant l’envoi aux services de traduction et restaurés après.
+* Une vérification stricte s’assure qu’aucun placeholder n’est supprimé, ajouté ou modifié.
+* Des corrections (`to_replace`) sont appliquées automatiquement pour éviter les faux positifs.
+
+---
+
+## 📜 Licence
+
+Le MIT License (MIT). Voir le fichier [LICENSE.md](LICENSE.md) pour plus d’informations.
