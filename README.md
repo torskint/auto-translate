@@ -19,7 +19,7 @@ Il inclut :
 Installer le package via Composer :
 
 ```bash
-composer require torskint/auto-translate
+composer require torskint/auto-translate:^5.0.0
 ````
 
 Ajouter le provider dans votre fichier `config/app.php` :
