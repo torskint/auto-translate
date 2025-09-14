@@ -25,29 +25,35 @@ class AutoTranslatePlaceholderHelper
     {
         $placeholders           = config('auto-translate.preserve_words', []);
         $placeholder_pattern    = config('auto-translate.preserve_words_pattern', null);
+        $channel                = config('auto-translate.log_channel', false);
 
-        // Restauration
+        # Restauration
         foreach ($placeholders as $i => $placeholder) {
             $translated = str_ireplace("[[PH_{$i}]]", $placeholder, $translated);
         }
 
-        // Vérification stricte : même placeholders qu'à l'origine
+        # Vérification stricte : même placeholders qu'à l'origine
         preg_match_all($placeholder_pattern, $original, $origMatches);
         preg_match_all($placeholder_pattern, $translated, $transMatches);
 
         if ($origMatches[0] !== $transMatches[0]) {
-            // throw new \RuntimeException(
-            //     "Les placeholders ne correspondent pas.\n".
-            //     "Original: " . implode(', ', $origMatches[0]) . "\n".
-            //     "Traduit: " . implode(', ', $transMatches[0]) . "\n".
-            //     "Référence: " . $original_key
-            // );
 
-            Log::warning('[TS_TRANSLATE] Incohérence de placeholders détectée', [
+            $debug = [
                 'Original'  => implode(', ', $origMatches[0]),
                 'Traduit'   => implode(', ', $transMatches[0]),
-                'Référence' => $original_key, // identifiant unique
-            ]);
+                'Référence' => $original_key,
+            ];
+
+            if ($channel && \Log::getLogger()->getChannel($channel)) {
+                Log::channel($channel)->warning(
+                    '[TS_TRANSLATE] Incohérence de placeholders détectée',
+                    $debug
+                );
+            } else {
+                throw new \RuntimeException(
+                    "Les placeholders ne correspondent pas.\n". implode("\n", $debug)
+                );
+            }
         }
 
         return $translated;

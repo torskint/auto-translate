@@ -227,6 +227,7 @@ return [
     |   pas être traduit correctement.
     |
     */
-    'base_locale' => 'fr'
+    'base_locale' => 'fr',
 
+    'log_channel' => 'auto-translate',
 ];
