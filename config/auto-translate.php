@@ -229,5 +229,17 @@ return [
     */
     'base_locale' => 'fr',
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auto Translation Log Channel
+    |--------------------------------------------------------------------------
+    |
+    | Ce canal de log est utilisé par le système de traduction automatique
+    | (translate, auto-mapping des clés, etc.). Toutes les actions liées
+    | aux migrations de clés, recherches manquantes et ajouts seront
+    | enregistrées ici pour faciliter le debug.
+    |
+    */
     'log_channel' => 'auto-translate',
 ];
