@@ -164,10 +164,27 @@ return [
         'ky',
         'hy',
         'kk',
+        'cs',
         'tg',
         'tr',
         'sk',
         'sq',
+
+        // Autres langues populaires
+        'zh',
+        'ja',
+        'ko',
+        'ar',
+        'hi',
+        'he',
+        'vi',
+        'th',
+        'id',
+        'ms',
+        'fa',
+        'bn',
+        'ta',
+        'ur',
     ],
 
 
@@ -192,15 +209,8 @@ return [
     |
     */
     'files' => [
-        'torskint/email-service-terms-and-conditions.php',
-        'torskint/liability-in-case-of-fraud-or-unauthorized-use.php',
-        'torskint/privacy-policy.php',
-        'torskint/refund-and-return-policy.php',
-        'torskint/terms-and-conditions-of-use.php',
         'torskint/translation.php',
-        'torskint/account-closing-terms.php',
-        'torskint/account-terms.php',
-        'torskint/anti-fraud-policy.php',
+        // ....
 
         'torskint/cookie-policy.php',
         'torskint/legal-notice.php',

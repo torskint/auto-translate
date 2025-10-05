@@ -44,7 +44,6 @@ class AutoTranslateReset extends Command
                     if ( !File::exists($newFilePath) ) {
                         continue;
                     }
-
                     File::delete($newFilePath);
 
                     $this->info('Reset ' . $locale . ', please wait...');

@@ -4,10 +4,12 @@ namespace Torskint\AutoTranslate\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+
 use Stichoza\GoogleTranslate\GoogleTranslate;
+use Torskint\AutoTranslate\Services\AmazonTranslate;
 
 use Torskint\AutoTranslate\Helpers\AutoTranslateHelper;
-use Torskint\AutoTranslate\Helpers\AutoTranslatePlaceholderHelper;
+use Torskint\AutoTranslate\Helpers\AutoTranslatePlaceholderHelper as PH;
 
 class AutoTranslateStarter extends Command
 {
@@ -39,37 +41,62 @@ class AutoTranslateStarter extends Command
         foreach ($locales as $locale) {
             try {
 
+                if ( $base_locale == $locale ) {
+                    continue;
+                }
+
                 if ( !is_dir( $currentLangPath = lang_path($locale) ) ) {
                     mkdir($currentLangPath, 0755, true);
                 }
 
-                # INITIALISATION DE GOOGLE TRANSLATE.
-                $translator = new GoogleTranslate($locale);
-                $translator->setSource($base_locale);
+                /*
+                |--------------------------------------------------------------------------
+                | Translation Service Initialization
+                |--------------------------------------------------------------------------
+                |
+                | Configuration du service de traduction à utiliser dans l'application.
+                | Selon la langue cible ou la disponibilité :
+                | - Amazon Translate : recommandé pour la confidentialité et la gestion des placeholders
+                | - Google Translate : fallback pour les langues non supportées par AWS
+                |
+                | ⚠️ IMPORTANT :
+                | - Vérifier que la langue est supportée avant d'appeler l'API.
+                | - Les placeholders (WEBSITE_NAME), (WEBSITE_URL),... doivent toujours être préservés.
+                |
+                */
+                $translator = new AmazonTranslate($locale);
+                if ( ! $translator->isSupportedLanguage() ) {
+                    $translator = new GoogleTranslate($locale);
+                }
+                $translator->setSource($base_locale); 
 
                 foreach (AutoTranslateHelper::get_bases_files() as $file) {
 
-                    $filePath = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
-                    $newFilePath = lang_path($locale . DIRECTORY_SEPARATOR . $file);
+                    $baseFilePath    = lang_path($base_locale . DIRECTORY_SEPARATOR . $file);
+                    $targetFilePath  = lang_path($locale . DIRECTORY_SEPARATOR . $file);
 
                     # TEMPORAIRES
-                    if ( !is_dir($tsDir  = dirname($newFilePath)) ) {
-                        mkdir($tsDir, 0777, true);
+                    if ( !is_dir($TD  = dirname($targetFilePath)) ) {
+                        mkdir($TD, 0777, true);
                     }
 
                     # SI LE FICHIER DE LANG DE BASE EST INTROUVABLE
                     # ON QUITTE L'EXECUTION DU SCRIPT.
-                    if ( !File::exists($filePath) ) {
+                    if ( !File::exists($baseFilePath) ) {
                         continue;
                     }
 
                     # EPURATION - SUPPRESSION DES LIGNES VIDES
-                    $basedFileData  = require $filePath;
+                    $basedFileData  = require $baseFilePath;
 
-                    $newFileData    = [];
-                    if ( is_file($newFilePath) ) {
-                        $newFileData    = require $newFilePath;
+                    $targetFileData    = [];
+                    if ( is_file($targetFilePath) ) {
+                        $targetFileData    = require $targetFilePath;
                     }
+
+                    # ON VEUT DES ARRAYS
+                    $basedFileData    = is_array($basedFileData) ? $basedFileData : [];
+                    $targetFileData   = is_array($targetFileData) ? $targetFileData : [];
 
                     $missings = [];
                     $basedFileContentArray = [];
@@ -79,51 +106,58 @@ class AutoTranslateStarter extends Command
                         }
                         $basedFileContentArray[$key] = $value;
 
-                        if ( !isset($newFileData[$key]) ) {
+                        if ( !isset($targetFileData[$key]) || empty($targetFileData[$key]) ) {
                             $missings[$key] = $value;
                         }
                     }
 
                     if ( empty($missings) ) {
-                        $this->info('RAS -> ' . $locale . ' -> OK.');
+                        // $this->info('-> ' . $locale . ' -> OK.');
                         continue;
                     }
-                    $this->info('Missing ' . $locale . ', please wait...');
+                    $this->info('Missing -> ' . $locale . ', please wait...');
                     $this->info('- File ' . $file . ', please wait... - ' . count($missings) . ' LINES.');
 
                     $results = [];
                     foreach ($missings as $original_key => $original_str) {
 
                         # VEROUILLAGE DES PLACEHOLDERS
-                        $protected_str = AutoTranslatePlaceholderHelper::protect($original_str);
+                        $protected_str = PH::protect($original_str);
 
                         # DEMARRAGE DE LA TRADUCTION DU TEXTE ACTUEL
                         $translated_str = $translator->translate($protected_str);
 
+                        # NETTOYAGE DES CARACTÈRES INVISIBLES ET NON IMPRIMABLES
+                        $translated_str = PH::cleanText($translated_str);
+
                         # RESTORATION DES PLACEHOLDERS
-                        $restored_str = AutoTranslatePlaceholderHelper::restore($original_str, $translated_str, $original_key);
-
-                        # REMPLACEMENT DE CERTAINS MOTS LOCAUX PAR LEURS EQUIVALENTS
-                        $results[$key] = AutoTranslateHelper::rplc($restored_str, $locale);
-
+                        # REMPLACEMENT DE CERTAINS MOTS LOCAUX CASSES PAR LEURS EQUIVALENTS
+                        if ( !empty($translated_str) ) {
+                            $restored_str               = PH::restore($original_str, $translated_str, $original_key);
+                            if ( empty($restored_str) ) {
+                                continue;
+                            }
+                            $results[$original_key]     = PH::rplc($restored_str, $locale);
+                        }
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
-                    $composedData = array_merge($newFileData, $results);
+                    $composedData = array_merge($targetFileData, $results);
 
-                    $same_nbLines_result = [];
-                    if ( count($basedFileContentArray) <> ( $ct = count($composedData) )) {
-                        $same_nbLines_result[$newFilePath] = array(
-                            "$newFilePath Nb Lignes"    => $ct,
-                            "BASED Nb Lignes"           => count($basedFileContentArray),
-                        );
-                        file_put_contents(app_path('missing__same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
+                    $basedFileSize = count($basedFileContentArray);
+                    if ( $basedFileSize <> ( $ct = count($composedData) )) {
+                        AutoTranslateHelper::log('SAME_LINES_ISSUE', [
+                            $targetFilePath => [
+                                "$targetFilePath Nb Lignes"    => $ct,
+                                "BASED Nb Lignes"           => $basedFileSize,
+                            ]
+                        ]);
                         continue;
                     }
 
                     # Démarrer le traitement
                     $langageKeyArray = array_keys($missings);
-                    foreach (AutoTranslateHelper::count_faker_words_in_based_file($missings) as $__word => $occurence_array) {
+                    foreach (PH::count_preserve_words_in_based_file($missings) as $__word => $occurence_array) {
 
                         foreach (array_values($results) as $file_line_position => $file_line) {
                             if (empty($occurence_array[$file_line_position])) {
@@ -134,35 +168,22 @@ class AutoTranslateStarter extends Command
 
                             $counter = substr_count($file_line, $__word);
                             if ( $counter <> $getBasedFileWordCountByLine ) {
-                                $occurence_result[$newFilePath][ $__word ] = array(
-                                    'ligne'     => $langageKeyName,
-                                    'normal'    => $getBasedFileWordCountByLine,
-                                    'trouvé'    => $counter,
-                                    'la ligne'  => $file_line,
-                                );
-                                file_put_contents(app_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
+                                AutoTranslateHelper::log('PLACEHOLDERS_ISSUE', [
+                                    $targetFilePath => [
+                                        $__word => [
+                                            'ligne'     => $langageKeyName,
+                                            'normal'    => $getBasedFileWordCountByLine,
+                                            'trouvé'    => $counter,
+                                            'la ligne'  => $file_line,
+                                        ]
+                                    ]
+                                ]);
                             }
                         }
                     }
 
                     # GENERER LE FICHIER PHP
-                    $arrayData = [];
-                    foreach ($composedData as $base_key => $text) {
-                        $text = trim($text);
-                        $text = str_ireplace('"https://"', "(https://)", $text);
-                        $text = str_ireplace('(WEB_PS)', "%s", $text);
-
-                        // ​​
-                        $text = preg_replace("/[\x00-\x1F\x7F\xA0]/u", '', $text);
-
-                        # SI ON TROUVE DES GUILLEMETS
-                        $text = str_replace('"', '\"', $text);
-
-                        $arrayData[$base_key] = $text;
-                    }
-                    $content_php = "<?php\n\nreturn " . var_export($arrayData, true) . ";\n";
-
-                    File::put($newFilePath, $content_php);
+                    AutoTranslateHelper::insert($composedData, $targetFilePath);
 
                     $this->info('- File ' . $file . ', FINISHED');
                 }

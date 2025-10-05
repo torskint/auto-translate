@@ -77,13 +77,13 @@ class AutoTranslateTestCount extends Command
                         $nothingToReport = false;
 
                         $this->info('Size Error :: ' . $locale . " :: BASED == $cb, TARGET == $ct");
-                        file_put_contents(lang_path('same_nbLines_result.txt'), print_r($same_nbLines_result, true) . "\n", FILE_APPEND);
+                        AutoTranslateHelper::log('SAME_LINES_ISSUE', $same_nbLines_result);
                         continue;
                     }
 
                     # Démarrer le traitement
                     $langageKeyArray = array_keys($basedFileContentArray);
-                    foreach (AutoTranslateHelper::count_faker_words_in_based_file($basedFileContentArray) as $__word => $occurence_array) {
+                    foreach (AutoTranslateHelper::count_preserve_words_in_based_file($basedFileContentArray) as $__word => $occurence_array) {
 
                         foreach (array_values($newFileData) as $file_line_position => $file_line) {
                             if (empty($occurence_array[$file_line_position])) {
@@ -103,8 +103,9 @@ class AutoTranslateTestCount extends Command
 
                                 $nothingToReport = false;
                                 
+                                AutoTranslateHelper::log('PLACEHOLDERS_ISSUE', $occurence_result);
+
                                 $this->info('Occurrence error :: ' . $locale . " :: WORD == $__word, LINE == $langageKeyName, NORMAL == $getBasedFileWordCountByLine, FOUND == $counter");
-                                file_put_contents(lang_path('occurence_result.txt'), print_r($occurence_result, true) . "\n", FILE_APPEND);
                             }
                         }
                     }

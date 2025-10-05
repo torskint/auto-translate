@@ -2,32 +2,10 @@
 
 namespace Torskint\AutoTranslate\Helpers;
 
+use Illuminate\Support\Facades\File;
+
 class AutoTranslateHelper
 {
-
-    public static function count_faker_words_in_based_file(array $langage): array
-    {
-        $preserveWords = config('auto-translate.preserve_words', []);
-
-        $faker_counter = [];
-
-        $langageTextArray = array_values($langage);
-        foreach ($preserveWords as $word) {
-            $faker_counter[$word] = [];
-            foreach ($langageTextArray as $lang_key_int => $text) {
-                $countThis = substr_count($text, $word);
-                if ( $countThis <= 0 ) {
-                    continue;
-                }
-                if (empty($faker_counter[$word][$lang_key_int])) {
-                    $faker_counter[$word][$lang_key_int] = 0;
-                }
-                $faker_counter[$word][$lang_key_int] += $countThis;
-            }
-        }
-
-        return $faker_counter;
-    }
 
     public static function get_bases_files(): array
     {
@@ -52,17 +30,30 @@ class AutoTranslateHelper
         return $allBaseFiles;
     }
 
-    public static function rplc($text, $langIso): string
+    public static function insert(array $composedData, string $newFilePath)
     {
-        $data = config('auto-translate.to_replace', []);
+        $arrayData = [];
+        foreach ($composedData as $base_key => $text) {
+            $text = trim($text);
+            // $text = str_ireplace('"https://"', "(https://)", $text);
+            // $text = str_ireplace('(WEB_PS)', "%s", $text);
 
-        if ( isset($data[$langIso]) ) {
-            foreach ($data[$langIso] as $key => $value) {
-                $text = str_ireplace($key, $value, $text);
-            }
+            // // ​​
+            // $text = preg_replace("/[\x00-\x1F\x7F\xA0]/u", '', $text);
+
+            // # SI ON TROUVE DES GUILLEMETS
+            // $text = str_replace('"', '\"', $text);
+
+            $arrayData[$base_key] = $text;
         }
+        $content_php = "<?php\n\nreturn " . var_export($arrayData, true) . ";\n";
 
-        return $text;
+        File::put($newFilePath, $content_php);
+    }
+
+    public static function log(string $name, array $data)
+    {
+        return file_put_contents(lang_path($name . '.LOG'), print_r($data, true) . "\n", FILE_APPEND);
     }
 
 }
