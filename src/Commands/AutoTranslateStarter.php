@@ -140,7 +140,10 @@ class AutoTranslateStarter extends Command
                             # RETOURNE UN TEXTE VIDE, SI LA TRADUCTION EST ERRONNEE.
                             # ---------------------------------------------------------
                             if ( empty($restored_str) ) {
-                                $wrongly_translated_data[$original_key] = $original_str;
+                                $wrongly_translated_data[$original_key] = [
+                                    'original'      => $original_str,
+                                    'translated'    => $translated_str,
+                                ];
                                 continue;
                             }
 
