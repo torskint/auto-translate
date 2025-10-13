@@ -119,6 +119,7 @@ class AutoTranslateStarter extends Command
                     $this->info('- File ' . $file . ', please wait... - ' . count($missings) . ' LINES.');
 
                     $results = [];
+                    $wrongly_translated_data = [];
                     foreach ($missings as $original_key => $original_str) {
 
                         # VEROUILLAGE DES PLACEHOLDERS
@@ -134,15 +135,22 @@ class AutoTranslateStarter extends Command
                         # REMPLACEMENT DE CERTAINS MOTS LOCAUX CASSES PAR LEURS EQUIVALENTS
                         if ( !empty($translated_str) ) {
                             $restored_str               = PH::restore($original_str, $translated_str, $original_key);
+                            
+                            # ---------------------------------------------------------
+                            # RETOURNE UN TEXTE VIDE, SI LA TRADUCTION EST ERRONNEE.
+                            # ---------------------------------------------------------
                             if ( empty($restored_str) ) {
+                                $wrongly_translated_data[$original_key] = $original_str;
                                 continue;
                             }
+
                             $results[$original_key]     = PH::rplc($restored_str, $locale);
                         }
                     }
 
                     # Vérifier que ce fichier et le fichier de base ont le même nombre de lignes
-                    $composedData = array_merge($targetFileData, $results);
+                    $composedData_1 = array_merge($targetFileData, $results);
+                    $composedData   = array_merge($composedData_1, $wrongly_translated_data);
 
                     $basedFileSize = count($basedFileContentArray);
                     if ( $basedFileSize <> ( $ct = count($composedData) )) {

@@ -70,8 +70,8 @@ class AutoTranslatePlaceholderHelper
             if ($channel) {
                 AutoTranslateHelper::log('PLACEHOLDERS_ISSUE', $debug);
             } else {
-                $message = "[TS_TRANSLATE] Incohérence de placeholders détectée :";
-                throw new \RuntimeException($message . "\n". implode("\n", $debug));
+                // $message = "[TS_TRANSLATE] Incohérence de placeholders détectée :";
+                // throw new \RuntimeException($message . "\n". implode("\n", $debug));
             }
 
             return '';
