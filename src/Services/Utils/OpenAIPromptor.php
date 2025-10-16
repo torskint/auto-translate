@@ -18,7 +18,7 @@ class OpenAIPromptor
         $prompt = <<<EOT
 You are a professional translator specializing in software localization, UI content, and technical texts.  
 
-Your task is to translate the following text from {$this->sourceLanguage} to {$this->targetLanguage}.  
+Your task is to translate the following text in {$this->targetLanguage} language.  
 Translate everything fully into {$this->targetLanguage}. Do not leave any part in another language, except the placeholders. Keep placeholders exactly as they are.
 Do not change any placeholders like __PLACEHOLDER_x__.
 
