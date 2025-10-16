@@ -4,7 +4,7 @@ namespace Torskint\AutoTranslate\Helpers;
 
 use Illuminate\Support\Facades\File;
 
-class AutoTranslateHelper
+class AutoTranslateHelper extends AbstractTranslateHelper
 {
 
     public static function get_bases_files(): array
@@ -43,6 +43,10 @@ class AutoTranslateHelper
 
             // # SI ON TROUVE DES GUILLEMETS
             // $text = str_replace('"', '\"', $text);
+
+            $text = trim($text, "'");
+            $text = trim($text, '"');
+            $text = trim($text);
 
             $arrayData[$base_key] = $text;
         }

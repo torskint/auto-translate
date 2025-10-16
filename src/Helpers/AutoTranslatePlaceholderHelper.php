@@ -2,7 +2,7 @@
 
 namespace Torskint\AutoTranslate\Helpers;
 
-class AutoTranslatePlaceholderHelper
+class AutoTranslatePlaceholderHelper extends AbstractTranslateHelper
 {
 
     private static function placeholder($key)

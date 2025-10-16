@@ -7,7 +7,6 @@ use Torskint\AutoTranslate\Services\AbstractTranslateService;
 
 class GoogleTranslate extends AbstractTranslateService
 {
-    protected GoogleTranslate $client;
 
     public function __construct(string $targetLang)
     {

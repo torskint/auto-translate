@@ -8,7 +8,6 @@ use Torskint\AutoTranslate\Services\AbstractTranslateService;
 
 class OpenAITranslate extends AbstractTranslateService
 {
-    protected OpenAI $client;
 
     public function __construct(string $targetLang)
     {

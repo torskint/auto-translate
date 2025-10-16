@@ -8,7 +8,6 @@ use Torskint\AutoTranslate\Services\AbstractTranslateService;
 
 class AmazonTranslate extends AbstractTranslateService
 {
-    protected TranslateClient $client;
 
     /*
     |--------------------------------------------------------------------------

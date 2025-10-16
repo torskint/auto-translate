@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use Torskint\AutoTranslate\Helpers\AutoTranslateHelper;
 use Torskint\AutoTranslate\Helpers\AutoTranslatePlaceholderHelper;
 
-class AutoTranslationUtility
+class AutoTranslationUtility extends AbstractTranslateHelper
 {
 
 	protected array $sourceFileData = [];
@@ -55,8 +55,8 @@ class AutoTranslationUtility
 		    if ( empty($this->missings) ) {
 		        continue;
 		    }
-		    $this->info('Missing -> ' . $this->targetLang . ', please wait...');
-		    $this->info('- File ' . $file . ', please wait... - ' . count($this->missings) . ' LINES.');
+		    $this->command->info('Missing -> ' . $this->targetLang . ', please wait...');
+		    $this->command->info('- File ' . $file . ', please wait... - ' . count($this->missings) . ' LINES.');
 
 		    $results = [];
 		    $this->wrongly_translated_data = [];
@@ -99,7 +99,7 @@ class AutoTranslationUtility
 		    # GENERER LE FICHIER PHP
 		    AutoTranslateHelper::insert($composedData, $targetFilePath);
 
-		    $this->info('- File ' . $file . ', FINISHED');
+		    $this->command->info('- File ' . $file . ', FINISHED');
 		}
 	}
 
@@ -107,7 +107,10 @@ class AutoTranslationUtility
 	private function translateText(string $original_str): bool|string
 	{
 		# VEROUILLAGE DES PLACEHOLDERS
-		[$protected_str, $mapping] = AutoTranslatePlaceholderHelper::protect($original_str);
+		$result = AutoTranslatePlaceholderHelper::protect($original_str);
+
+		$protected_str = $result['protected_str'];
+		$mapping       = $result['mapping'];
 
 		foreach ($this->translators as $translator) {
 			# DEMARRAGE DE LA TRADUCTION DU TEXTE ACTUEL
@@ -119,18 +122,39 @@ class AutoTranslationUtility
 			# RESTORATION DES PLACEHOLDERS
 			# REMPLACEMENT DE CERTAINS MOTS LOCAUX CASSES PAR LEURS EQUIVALENTS
 			if ( !empty($translated_str) ) {
-			    [$restored_str, $valid, $errors] = AutoTranslatePlaceholderHelper::restore($translated_str, $mapping);
+			    $response = AutoTranslatePlaceholderHelper::restore($translated_str, $mapping);
 			    
 			    # ---------------------------------------------------------
 			    # RETOURNE UN TEXTE VIDE, SI LA TRADUCTION EST ERRONEE.
 			    # ---------------------------------------------------------
-			    if ( $valid ) {
-			        return $restored_str;
+			    if ( $response['valid'] === true ) {
+			        return self::cleanApiStrings( $response['restored_str'] );
 			    }
 			}
 		}
 
 		return false;
+	}
+
+
+	/**
+	 * Nettoie les quotes autour d'une chaîne ou d'un tableau de chaînes.
+	 *
+	 * @param string|array $input
+	 * @return string|array
+	 */
+	private static function cleanApiStrings(string|array $input): string|array
+	{
+	    $clean = function($str) {
+	        // Supprime les quotes simples ou doubles au début et à la fin
+	        return preg_replace("/^['\"]|['\"]$/", '', $str);
+	    };
+
+	    if (is_array($input)) {
+	        return array_map($clean, $input);
+	    }
+
+	    return $clean($input);
 	}
 
 

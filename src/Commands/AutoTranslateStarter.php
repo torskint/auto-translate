@@ -4,6 +4,7 @@ namespace Torskint\AutoTranslate\Commands;
 
 use Illuminate\Console\Command;
 use Torskint\AutoTranslate\Services\ServiceManager;
+use Torskint\AutoTranslate\Helpers\AutoTranslationUtility;
 
 class AutoTranslateStarter extends Command
 {
@@ -61,6 +62,7 @@ class AutoTranslateStarter extends Command
                 $translators = (new ServiceManager)->process($base_locale, $locale);
 
                 $utility = new AutoTranslationUtility($translators, $base_locale, $locale);
+                $utility->setCommand($this);
                 $utility->run();
 
             } catch (\Exception $e) {

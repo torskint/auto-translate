@@ -6,6 +6,10 @@ namespace Torskint\AutoTranslate\Services;
 
 use Torskint\AutoTranslate\Exceptions\UnsupportedTargetLanguageException;
 
+use Aws\Translate\TranslateClient;
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use OpenAI\Client as OpenAIClient;
+
 /**
  * Classe abstraite de base pour tous les services de traduction.
  * Fournit les propriétés communes et une logique partielle.
@@ -17,7 +21,7 @@ abstract class AbstractTranslateService implements ServiceInterface
      * Le client peut être de n'importe quel type de service de traduction
      * (AWS Translate, OpenAI, DeepL, etc.)
      */
-    protected mixed $client;
+    protected TranslateClient|GoogleTranslate|OpenAIClient $client;
 
     /**
      * @var string Langue cible
