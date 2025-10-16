@@ -150,9 +150,9 @@ class AutoTranslatePlaceholderHelper
         }
 
         return [
-            'restored_str' => $restored,
-            'valid' => empty($errors),
-            'errors' => $errors,
+            'restored_str'  => $restored,
+            'valid'         => empty($errors),
+            'errors'        => $errors,
         ];
     }
 
