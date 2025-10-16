@@ -1,16 +1,14 @@
 <?php
 
-namespace Torskint\AutoTranslate\Services;
+namespace Torskint\AutoTranslate\Services\Translation;
 
 use Aws\Translate\TranslateClient;
 use Aws\Exception\AwsException;
+use Torskint\AutoTranslate\Services\AbstractTranslateService;
 
-class AmazonTranslate
+class AmazonTranslate extends AbstractTranslateService
 {
     protected TranslateClient $client;
-
-    protected string $targetLang;
-    protected string $sourceLang;
 
     /*
     |--------------------------------------------------------------------------
@@ -39,7 +37,8 @@ class AmazonTranslate
 
     public function __construct(string $targetLang)
     {
-    	$this->targetLang 	= $targetLang;
+        parent::__construct($targetLang);
+
     	$this->client 		= new TranslateClient([
     	    'version' => 'latest',
     	    'region' => env('AWS_DEFAULT_REGION', 'eu-central-1'),
@@ -50,18 +49,10 @@ class AmazonTranslate
     	]);
     }
 
-    public function setSource(string $sourceLang) {
-    	$this->sourceLang = $sourceLang;
-    }
-
-    public function isSupportedLanguage(): bool {
-        return in_array($this->targetLang, $this->supportedLanguages);
-    }
-
     /**
      * Traduit un texte de $sourceLang vers $targetLang
      */
-    public function translate(string $text): string
+    public function handle(string $text): string
     {
         try {
             $result = $this->client->translateText([
@@ -75,5 +66,9 @@ class AmazonTranslate
         } catch (AwsException $e) {
         	return '';
         }
+    }
+
+    public function getPriority(): int {
+        return 2;
     }
 }

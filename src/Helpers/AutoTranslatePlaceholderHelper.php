@@ -18,79 +18,142 @@ class AutoTranslatePlaceholderHelper
     /**
      * Remplace les placeholders par des marqueurs temporaires avant traduction
      */
-    public static function protect(string $text): string
+    public static function protect(string $text): array
     {
         $placeholders = config('auto-translate.preserve_words', []);
+        $mapping = [];
+
         foreach ($placeholders as $i => $placeholder) {
-            $text = str_ireplace($placeholder, self::placeholder($i), $text);
+            $token = self::placeholder($i);
+
+            // Compter les occurrences dans le texte
+            $count = substr_count(strtolower($text), strtolower($placeholder));
+
+            if ($count === 0) {
+                continue;
+            }
+            $text = str_ireplace($placeholder, $token, $text);
+
+            // Enregistrer le mapping
+            $mapping[$token] = [
+                'placeholder' => $placeholder,
+                'count' => $count,
+            ];
         }
-        return $text;
+
+        return [
+            'protected_str' => $text,
+            'mapping'  => $mapping,
+        ];
     }
+
 
     /**
-     * Restaure les placeholders après traduction et vérifie qu'ils correspondent
+     * Restaure les placeholders dans le texte traduit
+     * et détecte les erreurs éventuelles.
+     *
+     * @return array {
+     *     @var string 'text'  → texte restauré
+     *     @var array  'errors' → erreurs de restauration détectées
+     * }
      */
-    public static function restore(string $original, string $translated, string $original_key): string
+    public static function restore(string $translatedText, array $mapping): array
     {
-        $placeholders           = config('auto-translate.preserve_words', []);
-        $placeholder_pattern    = config('auto-translate.preserve_words_pattern', null);
-        $channel                = config('auto-translate.log_channel', false);
+        $errors = [];
+        $restored = $translatedText;
 
-        if ( empty($translated) ) {
-            return '';
+        // Extraire la liste attendue
+        $expectedTokens = array_keys($mapping);
+
+        // 1️⃣ Trouver tous les tokens présents dans le texte via détection dynamique
+        //    (On cherche seulement ceux du mapping)
+        $foundTokens = [];
+        foreach ($expectedTokens as $token) {
+            if (stripos($translatedText, $token) !== false) {
+                $foundTokens[] = $token;
+            }
         }
 
-        # Restauration
-        foreach ($placeholders as $i => $placeholder) {
-            $translated = str_ireplace(self::placeholder($i), $placeholder, $translated);
-        }
+        // 2️⃣ Détecter les tokens inattendus
+        //    -> tout texte ressemblant à un token mais non dans le mapping
+        //    Pour cela, on cherche une "empreinte" commune.
+        // $tokenFragments = self::detectCommonTokenFragments($expectedTokens);
+        // if ($tokenFragments) {
+        //     // Ex : "__PH_" ou "@@PRESERVE_" ou autre
+        //     [$prefix, $suffix] = $tokenFragments;
+        //     $pattern = '/' . preg_quote($prefix, '/') . '.*?' . preg_quote($suffix, '/') . '/';
+        //     preg_match_all($pattern, $translatedText, $matches);
+        //     $tokensInText = $matches[0] ?? [];
 
-        # Vérification stricte : même placeholders qu'à l'origine
-        preg_match_all($placeholder_pattern, $original, $origMatches);
-        preg_match_all($placeholder_pattern, $translated, $transMatches);
+        //     // Comparer avec les tokens attendus
+        //     $unexpectedTokens = array_diff($tokensInText, $expectedTokens);
+        //     foreach ($unexpectedTokens as $token) {
+        //         $errors[] = [
+        //             'type' => 'unexpected_token',
+        //             'token' => $token,
+        //             'message' => "Le token {$token} n’existe pas dans le mapping original.",
+        //         ];
+        //     }
+        // }
 
-        $origPlaceholders = $origMatches[0] ?? [];
-        $transPlaceholders = $transMatches[0] ?? [];
-
-        # Comparaison logique (non sensible à l'ordre)
-        $missingInTranslation = array_diff($origPlaceholders, $transPlaceholders);
-        $extraInTranslation   = array_diff($transPlaceholders, $origPlaceholders);
-
-        if ( !empty($missingInTranslation) || !empty($extraInTranslation) ) {
-
-            $debug = [
-                'Message'           => 'Incohérence de placeholders détectée',
-                'Original'          => $original,
-                'Traduit'           => $translated,
-                'Référence'         => $original_key ?? '(clé inconnue)',
-                'Manquants'         => $missingInTranslation,
-                'Supplémentaires'   => $extraInTranslation,
+        // 3️⃣ Tokens manquants
+        $missingTokens = array_diff($expectedTokens, $foundTokens);
+        foreach ($missingTokens as $token) {
+            $errors[] = [
+                'type' => 'missing_token',
+                'token' => $token,
+                'expected_placeholder' => $mapping[$token]['placeholder'] ?? null,
+                'message' => "Le token {$token} est absent du texte traduit.",
             ];
-
-            if ($channel) {
-                AutoTranslateHelper::log('PLACEHOLDERS_ISSUE', $debug);
-            } else {
-                // $message = "[TS_TRANSLATE] Incohérence de placeholders détectée :";
-                // throw new \RuntimeException($message . "\n". implode("\n", $debug));
-            }
-
-            return '';
         }
 
-        return $translated;
-    }
+        // 4️⃣ Vérifier le nombre d’occurrences attendu
+        foreach ($mapping as $token => $info) {
+            $expectedCount = $info['count'];
+            $actualCount   = substr_count($translatedText, $token);
 
-    public static function rplc($text, $langIso): string
-    {
-        $data = config('auto-translate.to_replace', []);
-
-        if ( isset($data[$langIso]) ) {
-            foreach ($data[$langIso] as $key => $value) {
-                $text = str_ireplace($key, $value, $text);
+            if ($actualCount !== $expectedCount) {
+                $errors[] = [
+                    'type' => 'count_mismatch',
+                    'token' => $token,
+                    'expected' => $expectedCount,
+                    'found' => $actualCount,
+                    'message' => "Le token {$token} apparaît {$actualCount} fois au lieu de {$expectedCount}.",
+                ];
             }
         }
 
-        return $text;
+        // 5️⃣ Stop si erreurs critiques
+        if (!empty($errors)) {
+            return [
+                'restored' => $translatedText,
+                'valid' => false,
+                'errors' => $errors,
+            ];
+        }
+
+        // 6️⃣ Restauration stricte
+        foreach ($mapping as $token => $info) {
+            $placeholder = $info['placeholder'];
+            $restored = str_ireplace($token, $placeholder, $restored);
+        }
+
+        // 7️⃣ Vérifier qu’il ne reste aucun token connu dans le texte final
+        foreach ($expectedTokens as $token) {
+            if (stripos($restored, $token) !== false) {
+                $errors[] = [
+                    'type' => 'unrestored_token',
+                    'token' => $token,
+                    'message' => "Le token {$token} n’a pas été restauré correctement.",
+                ];
+            }
+        }
+
+        return [
+            'restored_str' => $restored,
+            'valid' => empty($errors),
+            'errors' => $errors,
+        ];
     }
 
     // COMPTER LE NOMBRE D'OCCURANCE DE $preserve_words QU'IL Y A DANS LE ARRAY
