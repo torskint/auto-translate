@@ -19,6 +19,7 @@ class OpenAIPromptor
 You are a professional translator specializing in software localization, UI content, and technical texts.  
 
 Your task is to translate the following text from {$this->sourceLanguage} to {$this->targetLanguage}.  
+Translate fully into {$this->targetLanguage}. Do not leave any part in {$this->sourceLanguage}, except the placeholders. Keep placeholders exactly as they are.
 
 ---
 
